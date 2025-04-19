@@ -1,0 +1,47 @@
+/ip firewall mangle
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out2 new-connection-mark=out1
+#CHECK
+
+/ip firewall mangle
+add action=mark-routing chain=output connection-mark=out1 new-routing-mark=\
+rtab-1 passthrough=no
+#CHECK
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out3 new-connection-mark=out2
+#CHECK
+
+/ip firewall mangle
+add action=mark-routing chain=output connection-mark=out2 new-routing-mark=\
+rtab-2 passthrough=no
+#CHECK
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting comment=\
+"Load Balance 1 Mark Connection" connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=out1 per-connection-classifier=\
+both-addresses-and-ports:3/0
+#CHECK
+
+/ip firewall mangle
+add action=mark-routing chain=prerouting comment=\
+"Load Balance 1 Mark Routing" connection-mark=out1 in-interface-list=\
+LAN new-routing-mark=rtab-1 passthrough=no
+#CHECK
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting comment=\
+"Load Balance 2 Mark Connection" connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=out2 per-connection-classifier=\
+both-addresses-and-ports:3/1
+#CHECK
+
+/ip firewall mangle
+add action=mark-routing chain=prerouting comment=\
+"Load Balance 2 Mark Routing" connection-mark=out2 in-interface-list=\
+LAN new-routing-mark=rtab-2 passthrough=no
+#CHECK
