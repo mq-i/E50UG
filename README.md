@@ -1,5 +1,15 @@
 /ip firewall mangle
 add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out2 new-connection-mark=out1
+#CHECK
+
+/ip firewall mangle
+add action=mark-routing chain=output connection-mark=out1 new-routing-mark=\
+rtab-1 passthrough=no
+#CHECK
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting connection-mark=no-mark \
 connection-state=new in-interface=pppoe-out3 new-connection-mark=out2
 #CHECK
 
