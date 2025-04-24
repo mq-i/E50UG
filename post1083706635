@@ -1,0 +1,51 @@
+/routing table
+add disabled=no fib name=out1
+add disabled=no fib name=out2
+add disabled=no fib name=out3
+
+/ip route
+add disabled=no distance=1 dst-address=0.0.0.0/0 gateway=pppoe-out3 pref-src=\
+"" routing-table=out3 scope=30 suppress-hw-offload=no target-scope=10
+add disabled=no distance=1 dst-address=0.0.0.0/0 gateway=pppoe-out2 pref-src=\
+"" routing-table=out2 scope=30 suppress-hw-offload=no target-scope=10
+add disabled=no distance=1 dst-address=0.0.0.0/0 gateway=pppoe-out1 pref-src=\
+"" routing-table=out1 scope=30 suppress-hw-offload=no target-scope=10
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out1 new-connection-mark=ToOut1
+add action=mark-routing chain=output connection-mark=ToOut1 new-routing-mark=\
+out1 passthrough=no
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out2 new-connection-mark=ToOut2
+add action=mark-routing chain=output connection-mark=ToOut2 new-routing-mark=\
+out2 passthrough=no
+# pppoe-out3 not ready
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out3 new-connection-mark=ToOut3
+add action=mark-routing chain=output connection-mark=ToOut3 new-routing-mark=\
+out3 passthrough=no
+add action=mark-connection chain=prerouting comment=\
+"Load Balance 1 Mark Connection" connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=ToOut1 per-connection-classifier=\
+both-addresses-and-ports:3/0
+add action=mark-routing chain=prerouting comment=\
+"Load Balance 1 Mark Routing" connection-mark=ToOut1 in-interface-list=\
+LAN new-routing-mark=out1 passthrough=no
+add action=mark-connection chain=prerouting comment=\
+"Load Balance 2 Mark Connection" connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=ToOut2 per-connection-classifier=\
+both-addresses-and-ports:3/1
+add action=mark-routing chain=prerouting comment=\
+"Load Balance 2 Mark Routing" connection-mark=ToOut2 in-interface-list=\
+LAN new-routing-mark=out2 passthrough=no
+add action=mark-connection chain=prerouting comment=\
+"Load Balance 3 Mark Connection" connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=ToOut3 per-connection-classifier=\
+both-addresses-and-ports:3/2
+add action=mark-routing chain=prerouting comment=\
+"Load Balance 3 Mark Routing" connection-mark=ToOut3 in-interface-list=\
+LAN new-routing-mark=out3 passthrough=no
