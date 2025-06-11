@@ -1,0 +1,21 @@
+/ip firewall mangle
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out1 new-connection-mark=out1
+add action=mark-routing chain=output connection-mark=out1 new-routing-mark=\
+rtab-1 passthrough=no
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new in-interface=pppoe-out2 new-connection-mark=out2
+add action=mark-routing chain=output connection-mark=out2 new-routing-mark=\
+rtab-2 passthrough=no
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=out1 per-connection-classifier=\
+both-addresses-and-ports:2/0
+add action=mark-routing chain=prerouting connection-mark=out1 in-interface-list=\
+LAN new-routing-mark=rtab-1 passthrough=no
+add action=mark-connection chain=prerouting connection-mark=no-mark \
+connection-state=new dst-address-type=!local in-interface-list=LAN \
+new-connection-mark=out2 per-connection-classifier=\
+both-addresses-and-ports:2/1
+add action=mark-routing chain=prerouting connection-mark=out2 in-interface-list=\
+LAN new-routing-mark=rtab-2 passthrough=no
